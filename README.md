@@ -3,4 +3,4 @@
 
 [下载链接]
 
-[下载链接]:https://github.com/zhengyu/workflow_delivery/blob/master/快递查询.alfredworkflow
+[下载链接]:https://github.com/zhengyu/workflow_delivery/blob/master/快递查询.alfredworkflow?raw=true
