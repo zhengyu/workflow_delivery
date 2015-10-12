@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>bundleid</key>
+	<string>com.zhengyu.kd</string>
+	<key>connections</key>
+	<dict>
+		<key>icon</key>
+		<array/>
+	</dict>
+	<key>createdby</key>
+	<string>zhengyu</string>
+	<key>description</key>
+	<string>通过百度api查询快递信息</string>
+	<key>disabled</key>
+	<false/>
+	<key>name</key>
+	<string>快递查询</string>
+	<key>objects</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>argumenttype</key>
+				<integer>1</integer>
+				<key>escaping</key>
+				<integer>0</integer>
+				<key>keyword</key>
+				<string>kd</string>
+				<key>runningsubtext</key>
+				<string>查询中...</string>
+				<key>script</key>
+				<string>include_once("workflows.php");
+require_once('function.php');
+
+//读取json文件获取相关快递信息
+$jsonFile = 'kd.json';
+$json = file_get_contents($jsonFile);
+$jsonArr = json_decode($json, true);
+
+$dataArr = array();
+
+//当json数据不为空时，变量并组装
+if (!empty($jsonArr)) {
+  foreach ($jsonArr as $key =&gt; $value) {
+    $tmpArr = array(
+      'title'=&gt;$key,
+      'subtitle'=&gt;$key.':'.$value,
+      'icon'=&gt;'icon.png',
+      'code'=&gt;$value
+    );
+    array_push($dataArr, $tmpArr);
+  }
+}
+
+$wf = new Workflows();
+$param = trim("{query}");
+
+$parts = explode("|",$param);
+$pcount = count($parts);
+$added = 0;
+
+switch ($pcount) {
+  case 1:
+    foreach ($dataArr as $dkey=&gt;$data) {
+      $added += buildResultEx($wf,$parts[0],$data['title'], $data['code'], $data['title'], $data['subtitle'], $data['icon'], "no", $data['title']."|");
+    }
+    break;
+  case 2:
+    //调用api获取数据
+    $apiUrl = 'https://sp0.baidu.com/9_Q4sjW91Qh3otqbppnN2DJv/pae/channel/data/asyncqury';
+
+    if (isset($parts[1]) &amp;&amp; $parts[1] != '') {
+      $postData = array(
+        'cb'=&gt;'jsonp',
+        'appid'=&gt;'4001',
+        'com'=&gt;trim($jsonArr[$parts[0]]),
+        'nu'=&gt;trim($parts[1]),
+      );
+      $returnData = callApi($apiUrl, $postData);
+
+      if (!empty($returnData)){
+        if (1 == intval($returnData['data']['info']['status'])) {
+          date_default_timezone_set('Asia/Shanghai');
+
+          if (isset($returnData['data']['info']['context'])) {
+            foreach ($returnData['data']['info']['context'] as $ckey =&gt; $cv) {
+              if ($ckey &lt; 8 ) {
+                $wf-&gt;result($ckey,'','时间: '.date('Y-m-d H:i:s', $cv['time']), $cv['desc'], 'icon.png', 'no');
+              }
+            }
+          }
+          
+        }else{
+          $wf-&gt;result('999','','查询失败', $returnData['msg'], 'icon.png', 'no');
+        }
+      }else{
+        $wf-&gt;result('999','','错误', 'api返回出错', 'icon.png', 'no');
+      }
+    }else{
+      $wf-&gt;result('999','',$parts[0], '请输入快递的单号', 'icon.png', 'no');
+    }
+
+    $added = 1;
+
+}
+
+if ($added == 0) {
+  $wf-&gt;result('999','','错误', '请输入正确的快递名称', 'icon.png', 'no');
+}
+
+echo $wf-&gt;toxml();</string>
+				<key>subtext</key>
+				<string>请输入快递公司名称</string>
+				<key>title</key>
+				<string>查询快递</string>
+				<key>type</key>
+				<integer>1</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>icon</string>
+			<key>version</key>
+			<integer>0</integer>
+		</dict>
+	</array>
+	<key>readme</key>
+	<string></string>
+	<key>uidata</key>
+	<dict>
+		<key>icon</key>
+		<dict>
+			<key>ypos</key>
+			<real>140</real>
+		</dict>
+	</dict>
+	<key>webaddress</key>
+	<string>http://www.zhihu.com/people/zhengyu4767</string>
+</dict>
+</plist>
